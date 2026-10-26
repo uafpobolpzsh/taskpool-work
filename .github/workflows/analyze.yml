@@ -17,49 +17,46 @@ jobs:
           git config user.name "actions"
           git checkout -B analysis
           python3 - <<'PY'
-          import os, json, subprocess
+          import os, json, subprocess, traceback
           branches = ['fan-dev','gyy','haoze','jl_dev','junteng_dev','junxian_dev','lueyang-dev','lv','ruige','wenshuo-dev','xiaochen_dev','yuxuan-dev','yuzhen-dev','zhaochen']
           os.makedirs('analysis', exist_ok=True)
           for br in branches:
-              subprocess.run(['git','checkout','-f',br], check=True, capture_output=True)
-              data = {}
-              tasks_root = 'tasks'
-              if os.path.isdir(tasks_root):
-                  for dev in sorted(os.listdir(tasks_root)):
-                      devdir = os.path.join(tasks_root, dev)
-                      if not os.path.isdir(devdir) or dev == 'examples':
-                          continue
-                      for task in sorted(os.listdir(devdir)):
-                          taskdir = os.path.join(devdir, task)
-                          if not os.path.isdir(taskdir):
+              try:
+                  subprocess.run(['git','checkout','-f','-B',br,'origin/'+br], check=True, capture_output=True)
+                  data = {}
+                  tasks_root = 'tasks'
+                  if os.path.isdir(tasks_root):
+                      for dev in sorted(os.listdir(tasks_root)):
+                          devdir = os.path.join(tasks_root, dev)
+                          if not os.path.isdir(devdir) or dev == 'examples':
                               continue
-                          files = []
-                          for root, dirs, fs in os.walk(taskdir):
-                              for f in fs:
-                                  files.append(os.path.relpath(os.path.join(root, f), taskdir))
-                          docs = {}
-                          docsdir = os.path.join(taskdir, 'docs')
-                          if os.path.isdir(docsdir):
-                              for f in sorted(os.listdir(docsdir)):
-                                  p = os.path.join(docsdir, f)
-                                  if os.path.isfile(p):
-                                      try:
+                          for task in sorted(os.listdir(devdir)):
+                              taskdir = os.path.join(devdir, task)
+                              if not os.path.isdir(taskdir):
+                                  continue
+                              files = []
+                              for root, dirs, fs in os.walk(taskdir):
+                                  for f in fs:
+                                      files.append(os.path.relpath(os.path.join(root, f), taskdir))
+                              docs = {}
+                              docsdir = os.path.join(taskdir, 'docs')
+                              if os.path.isdir(docsdir):
+                                  for f in sorted(os.listdir(docsdir)):
+                                      p = os.path.join(docsdir, f)
+                                      if os.path.isfile(p):
                                           docs[f] = open(p, encoding='utf-8', errors='ignore').read()
-                                      except Exception:
-                                          docs[f] = ''
-                          rootfiles = {}
-                          for f in sorted(os.listdir(taskdir)):
-                              p = os.path.join(taskdir, f)
-                              if os.path.isfile(p):
-                                  try:
+                              rootfiles = {}
+                              for f in sorted(os.listdir(taskdir)):
+                                  p = os.path.join(taskdir, f)
+                                  if os.path.isfile(p):
                                       rootfiles[f] = open(p, encoding='utf-8', errors='ignore').read()
-                                  except Exception:
-                                      rootfiles[f] = ''
-                          data[task] = {'files': sorted(files), 'docs': docs, 'rootfiles': rootfiles}
-              with open('analysis/' + br + '.json', 'w', encoding='utf-8') as fh:
-                  json.dump(data, fh, ensure_ascii=False, indent=1)
-          # example task
-          subprocess.run(['git','checkout','-f','main'], check=True, capture_output=True)
+                              data[task] = {'files': sorted(files), 'docs': docs, 'rootfiles': rootfiles}
+                  with open('analysis/' + br + '.json', 'w', encoding='utf-8') as fh:
+                      json.dump(data, fh, ensure_ascii=False, indent=1)
+              except Exception:
+                  traceback.print_exc()
+                  raise
+          subprocess.run(['git','checkout','-f','-B','main','origin/main'], check=True, capture_output=True)
           exdir = 'tasks/examples/example-task'
           ex = {'files': [], 'docs': {}, 'rootfiles': {}}
           for root, dirs, fs in os.walk(exdir):
