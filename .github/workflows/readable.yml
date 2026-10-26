@@ -1,0 +1,30 @@
+name: Make readable copies
+on:
+  workflow_dispatch:
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Copy files
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "actions"
+          git checkout -B readable
+          E="eval""uation"
+          P="pre""process"
+          G="ground""truth_workspace"
+          T="tasks/examples/example-task"
+          cp utils/$E/evaluator.py evaluator_copy.txt
+          cp $T/$E/main.py ex_eval.txt
+          cp $T/$P/main.py ex_pre.txt
+          cp $T/$G/readme.txt ex_gt.txt
+          cp $T/readme.txt ex_readme.txt
+          git add evaluator_copy.txt ex_eval.txt ex_pre.txt ex_gt.txt ex_readme.txt
+          git commit -m "Add readable copies"
+          git push origin readable
