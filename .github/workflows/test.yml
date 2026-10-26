@@ -1,0 +1,16 @@
+name: Test
+on:
+  push:
+    paths:
+      - '.github/workflows/test.yml'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Say hello
+        run: echo hello > hello.txt
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello
+          path: hello.txt
